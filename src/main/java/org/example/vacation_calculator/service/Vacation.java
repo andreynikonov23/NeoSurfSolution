@@ -15,15 +15,15 @@ public class Vacation {
     private LocalDate startDate;
     private DatePeriod vacationPeriod;
     private double incomeSum;
-    private ArrayList<DatePeriod> missedPeriods;
+    private ArrayList<DatePeriod> absentPeriods;
 
     public Vacation(){}
 
-    public Vacation(LocalDate startDate, DatePeriod vacationPeriod, double incomeSum, ArrayList<DatePeriod> missedPeriods) {
+    public Vacation(LocalDate startDate, DatePeriod vacationPeriod, double incomeSum, ArrayList<DatePeriod> absentPeriods) {
         this.startDate = startDate;
         this.vacationPeriod = vacationPeriod;
         this.incomeSum = incomeSum;
-        this.missedPeriods = missedPeriods;
+        this.absentPeriods = absentPeriods;
     }
 
     public LocalDate getStartDate() {
@@ -50,12 +50,12 @@ public class Vacation {
         this.incomeSum = incomeSum;
     }
 
-    public ArrayList<DatePeriod> getMissedPeriods() {
-        return missedPeriods;
+    public ArrayList<DatePeriod> getAbsentPeriods() {
+        return absentPeriods;
     }
 
-    public void setMissedPeriods(ArrayList<DatePeriod> missedPeriods) {
-        this.missedPeriods = missedPeriods;
+    public void setAbsentPeriods(ArrayList<DatePeriod> absentPeriods) {
+        this.absentPeriods = absentPeriods;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class Vacation {
 
     @Override
     public int hashCode() {
-        return (int) (31 * startDate.hashCode() * vacationPeriod.hashCode() * incomeSum * missedPeriods.hashCode());
+        return (int) (31 * startDate.hashCode() * vacationPeriod.hashCode() * incomeSum * absentPeriods.hashCode());
     }
 
     @Override
@@ -76,7 +76,7 @@ public class Vacation {
         Vacation otherVacation = (Vacation) obj;
 
         return startDate.equals(otherVacation.getStartDate()) && vacationPeriod.equals(otherVacation.getVacationPeriod()) &&
-                incomeSum == otherVacation.getIncomeSum() && missedPeriods.equals(otherVacation.getMissedPeriods());
+                incomeSum == otherVacation.getIncomeSum() && absentPeriods.equals(otherVacation.getAbsentPeriods());
     }
 
     public double calculatePay() {
@@ -85,13 +85,8 @@ public class Vacation {
         HashMap<YearMonth, Integer> workedDays = billingPeriod.getAbsentDaysByMonth();
 
         HashMap<YearMonth, Integer> absentDays = getAbsentDaysByMonths();
-        for (Map.Entry<YearMonth, Integer> entry : absentDays.entrySet()) {
-            YearMonth key = entry.getKey();
-            int num = entry.getValue();
-            int newValue = workedDays.get(key) - num;
-            workedDays.put(key, newValue);
-        }
 
+        absentDays.forEach((yearMonth, absentDay) -> workedDays.compute(yearMonth, (k, newValue) -> newValue - absentDay));
 
         double daysWorkedSum = 0;
         for(Map.Entry<YearMonth, Integer> entry : workedDays.entrySet()) {
@@ -117,27 +112,13 @@ public class Vacation {
     }
 
     public HashMap<YearMonth, Integer> getAbsentDaysByMonths() {
-        ArrayList<HashMap<YearMonth, Integer>> list = new ArrayList<>();
-        for (DatePeriod missedPeriod : missedPeriods) {
-            HashMap<YearMonth, Integer> absentDaysByMonth = missedPeriod.getAbsentDaysByMonth();
-            list.add(absentDaysByMonth);
+        if (absentPeriods == null || absentPeriods.isEmpty()) {
+            return new HashMap<>();
         }
-        return unitAbsentDaysByMonths(list);
-    }
-    public HashMap<YearMonth, Integer> unitAbsentDaysByMonths(ArrayList<HashMap<YearMonth, Integer>> list) {
-        HashMap<YearMonth, Integer> result = new HashMap<>();
 
-        for (HashMap<YearMonth, Integer> absentDaysByMonth : list) {
-            for(Map.Entry<YearMonth, Integer> entry : absentDaysByMonth.entrySet()) {
-                YearMonth yearMonth = entry.getKey();
-                int absentDays = entry.getValue();
-                if(result.containsKey(yearMonth)) {
-                    int newValue = result.get(yearMonth) + absentDays;
-                    result.put(yearMonth, newValue);
-                } else
-                    result.put(yearMonth, absentDays);
-            }
-        }
-        return result;
+        return absentPeriods.stream().map(DatePeriod::getAbsentDaysByMonth).reduce(new HashMap<>(), (result, absentDaysByMonths) -> {
+            absentDaysByMonths.forEach((yearMonth, absentDays) -> result.merge(yearMonth, absentDays, Integer::sum));
+            return result;
+        });
     }
 }

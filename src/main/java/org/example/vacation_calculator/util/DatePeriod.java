@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DatePeriod {
-    @JsonFormat(pattern = "yyyy-mm-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOn;
-    @JsonFormat(pattern = "yyyy-mm-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateTo;
 
     public DatePeriod(LocalDate dateOn, LocalDate dateTo) {

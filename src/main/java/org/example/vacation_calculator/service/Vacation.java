@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Vacation {
-    @JsonFormat(pattern = "yyyy-mm-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
     private DatePeriod vacationPeriod;
     private double incomeSum;

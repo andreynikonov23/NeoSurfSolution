@@ -1,13 +1,19 @@
 package org.example.vacation_calculator.util;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 public class DatePeriod {
+    @JsonFormat(pattern = "yyyy-mm-dd")
     private LocalDate dateOn;
+    @JsonFormat(pattern = "yyyy-mm-dd")
     private LocalDate dateTo;
 
     public DatePeriod(LocalDate dateOn, LocalDate dateTo) {
@@ -23,52 +29,28 @@ public class DatePeriod {
         return dateTo;
     }
 
-    public HashMap<Integer, Integer> getAbsentDaysByMonth() {
-        HashMap<Integer, Integer> absentDaysByMonth = new HashMap<>();
-        int month = 0;
+    public long getDayDiff() {
+        return ChronoUnit.DAYS.between(dateOn, dateTo) + 1;
+    }
+
+    public HashMap<YearMonth, Integer> getAbsentDaysByMonth() {
+        HashMap<YearMonth, Integer> absentDaysByMonth = new HashMap<>();
+        YearMonth yearMonth = null;
         LocalDate date = dateOn;
         int absentDays = 0;
         while (!date.isAfter(dateTo)) {
-            if (date.getMonthValue() != month) {
-                month = date.getMonthValue();
+            YearMonth currentYearMonth = YearMonth.from(date);
+            if (!currentYearMonth.equals(yearMonth)) {
+                yearMonth = currentYearMonth;
                 absentDays = 0;
             }
             absentDays++;
-            absentDaysByMonth.put(month, absentDays);
+            absentDaysByMonth.put(yearMonth, absentDays);
             date = date.plusDays(1);
         }
+
         return absentDaysByMonth;
-
     }
-
-//    public HashMap<Integer, Integer> getPaidDaysByMonths() {
-//        HashMap<Integer, Integer> paidDaysByMonth = new HashMap<>();
-//        int month = 0;
-//        LocalDate date = dateOn.with(TemporalAdjusters.firstDayOfMonth());
-//        LocalDate endDate = dateTo.with(TemporalAdjusters.lastDayOfMonth());
-//
-//        int paidDays = 0;
-//        while (!date.isAfter(endDate)) {
-//            if (date.getMonthValue() != month) {
-//                month = date.getMonthValue();
-//                paidDays = 0;
-//                paidDaysByMonth.put(month, paidDays);
-//            }
-//
-//            boolean isAbsent = false;
-//            if (!date.isBefore(dateOn) && !date.isAfter(dateTo)) {
-//                isAbsent = true;
-//            }
-//
-//            if(!isAbsent) {
-//                paidDays++;
-//                paidDaysByMonth.put(month, paidDays);
-//            }
-//
-//            date = date.plusDays(1);
-//        }
-//        return paidDaysByMonth;
-//    }
 
     @Override
     public String toString() {
